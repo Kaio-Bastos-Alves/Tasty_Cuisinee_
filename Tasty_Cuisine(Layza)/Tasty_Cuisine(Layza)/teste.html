@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Cadastro de Receitas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    input, textarea, button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    button {
+      background: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #218838;
+    }
+
+    .receita {
+      background: #fafafa;
+      padding: 15px;
+      margin-top: 15px;
+      border-left: 5px solid #28a745;
+      border-radius: 5px;
+    }
+
+    .receita h3 {
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Cadastrar Receita</h1>
+
+    <input type="text" id="nome" placeholder="Nome da receita">
+    <textarea id="ingredientes" placeholder="Ingredientes"></textarea>
+    <textarea id="modo" placeholder="Modo de preparo"></textarea>
+
+    <button onclick="adicionarReceita()">Salvar Receita</button>
+
+    <div id="listaReceitas"></div>
+  </div>
+
+  <script>
+    function adicionarReceita() {
+      const nome = document.getElementById("nome").value;
+      const ingredientes = document.getElementById("ingredientes").value;
+      const modo = document.getElementById("modo").value;
+
+      if (!nome || !ingredientes || !modo) {
+        alert("Preencha todos os campos!");
+        return;
+      }
+
+      const receitaDiv = document.createElement("div");
+      receitaDiv.classList.add("receita");
+
+      receitaDiv.innerHTML = `
+        <h3>${nome}</h3>
+        <p><strong>Ingredientes:</strong><br>${ingredientes}</p>
+        <p><strong>Modo de preparo:</strong><br>${modo}</p>
+      `;
+
+      document.getElementById("listaReceitas").appendChild(receitaDiv);
+
+      // limpar campos
+      document.getElementById("nome").value = "";
+      document.getElementById("ingredientes").value = "";
+      document.getElementById("modo").value = "";
+    }
+  </script>
+
+</body>
+</html>

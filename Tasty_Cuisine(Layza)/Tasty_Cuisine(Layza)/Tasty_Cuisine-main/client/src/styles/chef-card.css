@@ -1,0 +1,55 @@
+.chef-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: 0.3s;
+  cursor: pointer;
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.chef-card:hover {
+  transform: translateY(-6px);
+}
+
+.chef-image {
+  position: relative;
+  height: 300px;
+  overflow: hidden;
+}
+
+.chef-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.overlay {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 20px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  color: #fff;
+}
+
+.overlay h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  margin-bottom: 5px;
+}
+
+.overlay p {
+  font-size: 14px;
+  color: #ddd;
+}
+
+.chef-info {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px;
+  font-size: 14px;
+  color: #555;
+}

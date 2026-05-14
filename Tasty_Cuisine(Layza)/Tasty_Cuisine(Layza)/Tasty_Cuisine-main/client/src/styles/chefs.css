@@ -1,0 +1,115 @@
+.chefs-page {
+  background: #EDE6DB;
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+.chefs-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  margin: 50px 0;
+  text-align: center;
+}
+
+.chefs-header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 48px;
+  color: #F27A1A;
+  margin-bottom: 10px;
+}
+
+.chefs-header p {
+  font-size: 18px;
+  color: #6b5f57;
+}
+
+.chefs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 0;
+}
+
+/* SEÇÃO TRADIÇÃO */
+.tradicao {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+  margin: 80px auto;
+  padding: 60px 20px;
+  max-width: 1200px;
+  border-top: 1px solid #e8e8e8;
+}
+
+.tradicao:first-of-type {
+  border-top: none;
+  margin-top: 0;
+}
+
+.tradicao-texto h2 {
+  font-size: 2rem;
+  color: #F27A1A;
+  margin-bottom: 20px;
+  font-family: 'Playfair Display', serif;
+}
+
+.tradicao-texto p {
+  font-size: 1rem;
+  color: #555;
+  line-height: 1.8;
+  margin-bottom: 15px;
+}
+
+.tradicao-imagens {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.tradicao-imagens img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .chefs-header h1 {
+    font-size: 32px;
+  }
+
+  .chefs-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .tradicao {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    margin: 40px auto;
+    padding: 40px 20px;
+  }
+
+  .tradicao-imagens {
+    grid-template-columns: 1fr;
+  }
+
+  .tradicao-imagens img {
+    height: 250px;
+  }
+
+  .tradicao-texto h2 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .chefs-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,191 @@
+.publish-page {
+  background: #EDE6DB;
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+.publish-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.publish-container h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 36px;
+  color: #F27A1A;
+  margin-bottom: 10px;
+}
+
+.publish-container > p {
+  color: #6b5f57;
+  margin-bottom: 30px;
+  font-size: 16px;
+}
+
+.publish-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #F27A1A;
+  box-shadow: 0 0 0 3px rgba(242, 122, 26, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.publish-form button {
+  padding: 14px 24px;
+  background: #F27A1A;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-top: 10px;
+}
+
+.publish-form button:hover {
+  background: #d96810;
+}
+
+@media (max-width: 768px) {
+  .publish-container {
+    padding: 20px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ingrediente-input-row,
+.passo-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ingrediente-input-row input,
+.passo-input-row input {
+  flex: 1;
+  min-width: 80px;
+}
+
+.ingrediente-quantidade {
+  max-width: 90px;
+}
+
+.ingrediente-nome {
+  flex: 2;
+}
+
+.btn-adicionar {
+  padding: 10px 16px;
+  background: #1F6B3A;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s;
+  white-space: nowrap;
+  margin-top: 0;
+}
+
+.btn-adicionar:hover {
+  background: #175c30;
+}
+
+.lista-adicionados {
+  list-style: none;
+  padding: 0;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lista-adicionados li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f5f0ea;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+}
+
+.lista-passos {
+  counter-reset: passo;
+}
+
+.lista-passos li {
+  counter-increment: passo;
+}
+
+.lista-passos li span::before {
+  content: counter(passo) ". ";
+  font-weight: bold;
+  color: #1F6B3A;
+}
+
+.btn-remover {
+  background: none;
+  border: none;
+  color: #d32f2f;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+  line-height: 1;
+  margin-top: 0;
+}
+
+.btn-remover:hover {
+  color: #b71c1c;
+}

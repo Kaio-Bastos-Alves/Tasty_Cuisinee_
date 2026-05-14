@@ -1,0 +1,139 @@
+.register-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #EDE6DB;
+  padding: 40px 20px;
+}
+
+.register-container {
+  background: #fff;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  max-width: 450px;
+  width: 100%;
+  height: auto; /* Deixa o card crescer com os campos */
+  display: flex;
+  flex-direction: column;
+}
+
+.register-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.register-header h1 {
+  color: #F27A1A;
+  margin: 0 0 8px 0;
+  font-size: 2.2rem;
+  font-weight: 700;
+}
+
+.register-header p {
+  color: #999;
+  font-size: 1rem;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.register-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.register-form input {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  width: 100%;
+  box-sizing: border-box; /* RESOLVE O VAZAMENTO DO INPUT */
+  background-color: #fff;
+}
+
+.register-form input:focus {
+  outline: none;
+  border-color: #F27A1A;
+  box-shadow: 0 0 0 3px rgba(242, 122, 26, 0.1);
+}
+
+.register-button {
+  margin-top: 15px;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  background-color: #F27A1A;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.register-button:hover {
+  background-color: #d96810;
+}
+
+.register-error {
+  color: #d32f2f;
+  background: #ffebee;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  border-left: 4px solid #d32f2f;
+}
+
+.register-footer {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.register-footer a {
+  color: #F27A1A;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+/* Estilo das Abas (TABS) */
+.register-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #e8e8e8;
+}
+
+.register-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 12px 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #666;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s;
+  font-weight: 600;
+}
+
+.register-tab.active {
+  color: #F27A1A;
+  border-bottom-color: #F27A1A;
+}
+
+.register-tab:hover:not(.active) {
+  background-color: #f9f9f9;
+  color: #F27A1A;
+}
+
+/* O restante do seu CSS do register.container continua o mesmo... */

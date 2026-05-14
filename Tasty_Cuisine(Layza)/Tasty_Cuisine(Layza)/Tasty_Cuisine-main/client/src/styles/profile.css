@@ -1,0 +1,330 @@
+.perfil {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  background: #EDE6DB;
+  min-height: 100vh;
+}
+
+/* HEADER PERFIL */
+.perfil-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.perfil-info {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.avatar {
+  font-size: 3rem;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f0f0;
+  border-radius: 50%;
+}
+
+.perfil-info h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  color: #F27A1A;
+  margin: 0;
+}
+
+.perfil-info p {
+  margin: 5px 0;
+  color: #666;
+}
+
+.btn-editar {
+  background: #F27A1A;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.3s;
+}
+
+.btn-editar:hover {
+  background: #d96810;
+}
+
+/* EDIÇÃO */
+.perfil-edicao {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 30px;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inputs input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.preferencias-edicao {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag-editavel {
+  padding: 8px 14px;
+  background: #f0f0f0;
+  border: 2px solid #ddd;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.9rem;
+}
+
+.tag-editavel:hover {
+  border-color: #F27A1A;
+  background: #f5f5f5;
+}
+
+.tag-editavel.ativo {
+  background: #F27A1A;
+  color: white;
+  border-color: #F27A1A;
+}
+
+.btn-salvar {
+  background: #F27A1A;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.3s;
+  height: fit-content;
+}
+
+.btn-salvar:hover {
+  background: #d96810;
+}
+
+/* ABAS */
+.perfil-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #e8e8e8;
+}
+
+.perfil-tabs button {
+  background: transparent;
+  border: none;
+  padding: 15px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #666;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s;
+}
+
+.perfil-tabs button.active {
+  color: #F27A1A;
+  border-bottom-color: #F27A1A;
+}
+
+.perfil-tabs button:hover {
+  color: #F27A1A;
+}
+
+/* TAB CONTENT */
+.tab-content {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.titulo {
+  margin-bottom: 30px;
+}
+
+.titulo h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  color: #F27A1A;
+  margin: 0;
+}
+
+.recipes-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* CONFIGURAÇÕES */
+.configuracoes {
+  display: grid;
+  gap: 20px;
+}
+
+.card-config {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+}
+
+.card-config h3 {
+  font-size: 1.2rem;
+  color: #F27A1A;
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.card-config p {
+  color: #666;
+  margin: 0 0 15px 0;
+  font-size: 0.95rem;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.tag {
+  padding: 6px 12px;
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.tag.ativo {
+  background: #1F6B3A;
+  color: white;
+  border-color: #1F6B3A;
+}
+
+.linha {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.linha:last-child {
+  border-bottom: none;
+}
+
+.linha div strong {
+  display: block;
+  color: #F27A1A;
+  margin-bottom: 5px;
+}
+
+.linha div p {
+  margin: 0;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.btn-outline {
+  background: white;
+  border: 1px solid #ddd;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.btn-outline:hover {
+  background: #f5f5f5;
+  border-color: #999;
+}
+
+.btn-danger {
+  background: #d32f2f;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.3s;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.btn-danger:hover {
+  background: #b71c1c;
+}
+
+.card-config.full {
+  grid-column: 1 / -1;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .perfil {
+    padding: 20px;
+  }
+
+  .perfil-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+
+  .perfil-edicao {
+    flex-direction: column;
+  }
+
+  .perfil-tabs {
+    flex-wrap: wrap;
+  }
+
+  .cards,
+  .recipes-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+
+  .preferencias-edicao {
+    gap: 6px;
+  }
+
+  .tag-editavel {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
+}
