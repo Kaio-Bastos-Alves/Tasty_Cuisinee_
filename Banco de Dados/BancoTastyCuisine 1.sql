@@ -1,10 +1,10 @@
 CREATE DATABASE TASTYCUISINE
 GO
- 
+USE MASTER
+GO
 USE TASTYCUISINE
 GO
- 
- 
+
 CREATE TABLE Usuario (
     Cod_user INT IDENTITY(1,1) PRIMARY KEY,
     Status_User BIT,
@@ -41,7 +41,7 @@ CREATE TABLE Receitas (
     Modo_preparo NVARCHAR(MAX) NOT NULL,
     Ingredientes NVARCHAR(MAX),
     Cod_chefe INT NOT NULL,
-    Foto_receita VARBINARY(MAX),
+    Foto_receita NVARCHAR(MAX),
     FOREIGN KEY (Cod_chefe) REFERENCES Chefe(Cod_chefe),
     CONSTRAINT chk_ingredientes CHECK (Ingredientes IS NULL OR ISJSON(Ingredientes) = 1),
     CONSTRAINT chk_modo_preparo CHECK (ISJSON(Modo_preparo) = 1)
@@ -365,3 +365,5 @@ FROM vw_UsuariosInativos
 ORDER BY Dias_Desde_Ultimo_Acesso DESC;
  
 SELECT * FROM Usuario
+Select * From Chefe
+select * from Receitas
