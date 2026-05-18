@@ -7,7 +7,7 @@ const UNIDADES = ['unidades', 'gramas', 'kg', 'ml', 'litros', 'xícaras', 'colhe
 
 export default function PublishRecipe() {
   const [, setLocation] = useLocation();
-  const [formData, setFormData] = useState({ nomeReceita: '', descricao: '', imagem: '' });
+  const [formData, setFormData] = useState({ nomeReceita: '', descricao: '', imagem: ''});
   const [ingredientes, setIngredientes] = useState([]);
   const [passos, setPassos] = useState([]);
   const [novoIngrediente, setNovoIngrediente] = useState({ quantidade: '', unidade: 'unidades', nome: '' });
@@ -63,7 +63,8 @@ export default function PublishRecipe() {
         descricao: formData.descricao,
         modoPreparo: JSON.stringify(passos),
         ingredientes: JSON.stringify(ingredientes),
-        chefe: chefResponse.data
+        chefe: chefResponse.data,
+        fotoReceita: formData.imagem
       };
 
       const response = await receitasAPI.create(payload);

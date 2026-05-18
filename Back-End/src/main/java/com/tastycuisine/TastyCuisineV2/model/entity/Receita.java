@@ -40,7 +40,7 @@ public class Receita {
     private Chefe chefe;
 
     @Column(name = "Foto_receita")
-    private byte[] fotoReceita;
+    private String fotoReceita;
 
     @ManyToMany
     @JoinTable(
