@@ -11,6 +11,7 @@ export const API_ENDPOINTS = {
   RECEITAS_ALL: `${API_BASE_URL}/receita/findAll`,
   RECEITAS: `${API_BASE_URL}/receita`,
   RECEITA_BY_ID: (id: string | number) => `${API_BASE_URL}/receita/${id}`,
+  RECEITAS_BY_CHEFE: (codChefe: string | number) => `${API_BASE_URL}/receita/chefe/${codChefe}`,
   
   // Usuários
   USUARIOS_ALL: `${API_BASE_URL}/usuario/findAll`,
@@ -67,8 +68,18 @@ export async function apiCall<T>(
       return { error, status: response.status }
     }
 
-    const data = await response.json()
-    return { data, status: response.status }
+    if (response.status === 204) {
+      return { data: undefined as unknown as T, status: response.status }
+    }
+
+    const contentType = response.headers.get('content-type') || ''
+    if (contentType.includes('application/json')) {
+      const data = await response.json()
+      return { data, status: response.status }
+    }
+
+    const text = await response.text()
+    return { data: text as unknown as T, status: response.status }
   } catch (error) {
     return {
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -81,6 +92,7 @@ export async function apiCall<T>(
 export const receitasAPI = {
   getAll: () => apiCall(API_ENDPOINTS.RECEITAS_ALL),
   getById: (id: string | number) => apiCall(API_ENDPOINTS.RECEITA_BY_ID(id)),
+  getByChef: (codChefe: string | number) => apiCall(API_ENDPOINTS.RECEITAS_BY_CHEFE(codChefe)),
   create: (data: any) =>
     apiCall(API_ENDPOINTS.RECEITAS, {
       method: 'POST',

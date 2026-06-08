@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { receitas, chefes } from '../data/recipes.js';
+import { chefesAPI, receitasAPI } from '../lib/api.ts';
 import RecipeCard from '../components/RecipeCard.jsx';
 import { useFavorites } from '../hooks/useFavorites.js';
 import '../styles/chef-profile.css';
@@ -9,53 +9,131 @@ export default function ChefProfile() {
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState('receitas');
   const [isEditing, setIsEditing] = useState(false);
-
-  // Simular chefe logado (primeiro chefe)
-  const chefeId = 'marie';
-  const chefe = chefes[chefeId];
+  const [chef, setChef] = useState(null);
+  const [chefRecipes, setChefRecipes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
+  const [debugInfo, setDebugInfo] = useState([]);
   const { favorites } = useFavorites();
 
-  useEffect(() => {
-    if (!chefe) {
-      setLocation('/login');
-    }
-  }, [chefe, setLocation]);
+  const userType = localStorage.getItem('userType');
+  const userId = localStorage.getItem('userId');
 
-  if (!chefe) {
+  useEffect(() => {
+    if (userType !== 'chefe' || !userId) {
+      setLocation('/login');
+      return;
+    }
+
+    const chefId = Number(userId);
+    const loadChefData = async () => {
+      const debug = [];
+      debug.push(`userType=${userType}`);
+      debug.push(`userId=${userId}`);
+      debug.push(`chefId=${chefId}`);
+
+      try {
+        const chefRes = await chefesAPI.getById(chefId);
+        debug.push(`chefesAPI.getById status=${chefRes.status}`);
+        if (chefRes.error) {
+          debug.push(`chefRes.error=${chefRes.error}`);
+        }
+        if (!chefRes.data) {
+          setFetchError('Não foi possível carregar o perfil do chefe.');
+          setDebugInfo(debug);
+          setLocation('/login');
+          return;
+        }
+
+        setChef(chefRes.data);
+        debug.push(`chef encontrado: codChefe=${chefRes.data.codChefe} nome=${chefRes.data.nomeCompleto}`);
+
+        const receitasRes = await receitasAPI.getByChef(chefId);
+        debug.push(`receitasAPI.getByChef status=${receitasRes.status}`);
+        if (receitasRes.error) {
+          debug.push(`receitasRes.error=${receitasRes.error}`);
+        }
+
+        let receitas = Array.isArray(receitasRes.data)
+          ? receitasRes.data
+          : Array.isArray(receitasRes.data?.content)
+            ? receitasRes.data.content
+            : [];
+        debug.push(`receitasRes.data type=${typeof receitasRes.data} count=${Array.isArray(receitasRes.data) ? receitasRes.data.length : Array.isArray(receitasRes.data?.content) ? receitasRes.data.content.length : 'n/a'}`);
+
+        const matchesChef = (recipe) => {
+          return recipe?.chefe?.codChefe === chefId
+            || recipe?.codChefe === chefId
+            || recipe?.chefId === chefId
+            || Number(recipe?.chefe?.codChefe) === chefId
+            || Number(recipe?.codChefe) === chefId
+            || Number(recipe?.chefId) === chefId;
+        };
+
+        if (receitasRes.error || receitas.length === 0) {
+          debug.push('fallback: buscar todas as receitas e filtrar por chef');
+          const allRes = await receitasAPI.getAll();
+          debug.push(`receitasAPI.getAll status=${allRes.status}`);
+          if (allRes.error) {
+            debug.push(`receitasAll.error=${allRes.error}`);
+          }
+          if (allRes.data && Array.isArray(allRes.data)) {
+            receitas = allRes.data.filter(matchesChef);
+            debug.push(`fallback receitas filter count=${receitas.length}`);
+          } else {
+            debug.push('fallback receitas não é array ou está vazio');
+          }
+
+          if ((receitasRes.error || receitas.length === 0) && receitas.length === 0) {
+            setFetchError('Não foi possível carregar suas receitas. Verifique os detalhes em debug.');
+          }
+        }
+
+        setChefRecipes(receitas);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        debug.push(`catch error=${message}`);
+        setFetchError('Erro ao carregar os dados do chef. Veja o debug abaixo para detalhes.');
+      } finally {
+        setDebugInfo(debug);
+        setLoading(false);
+      }
+    };
+
+    loadChefData();
+  }, [userId, userType, setLocation]);
+
+  if (loading) {
     return <div className="chef-profile"><p>Carregando...</p></div>;
   }
 
-  const chefRecipes = chefe.receitas
-    .map(id => ({ id, recipe: receitas[id] }))
-    .filter(item => item.recipe);
+  if (!chef) {
+    return <div className="chef-profile"><p>{fetchError || 'Chefe não encontrado.'}</p></div>;
+  }
 
   const favs = favorites;
-  const receitasFavoritadas = chefRecipes.filter(item => favs.includes(item.id));
   const totalReceitas = chefRecipes.length;
-  const totalFavs = receitasFavoritadas.length;
+  const totalFavs = chefRecipes.filter(item => favs.includes(String(item.codReceitas))).length;
 
-  // Calcular média de dificuldade
-  const dificuldades = { 'Fácil': 1, 'Médio': 2, 'Difícil': 3 };
-  const somaD = chefRecipes.reduce((acc, item) => acc + (dificuldades[item.recipe?.dificuldade] || 1), 0);
-  const mediaD = totalReceitas > 0 ? (somaD / totalReceitas).toFixed(1) : 0;
-  const nivelTexto = mediaD <= 1.5 ? 'Fácil' : mediaD <= 2.5 ? 'Médio' : 'Difícil';
-
-  // Ranking de receitas
   const receitasComFavs = chefRecipes
     .map(item => ({
-      id: item.id,
-      nome: item.recipe?.nome || 'Receita',
-      favs: favs.includes(item.id) ? 1 : 0,
-      categoria: item.recipe?.categoria || 'Outros'
+      id: item.codReceitas,
+      nome: item.nomeReceita || 'Receita',
+      favs: favs.includes(String(item.codReceitas)) ? 1 : 0,
+      categoria: item.categorias?.[0]?.nomeCategoria || 'Outros'
     }))
     .sort((a, b) => b.favs - a.favs);
 
-  // Distribuição por categoria
   const categorias = {};
   chefRecipes.forEach(item => {
-    const cat = item.recipe?.categoria || 'Outros';
+    const cat = item.categorias?.[0]?.nomeCategoria || 'Outros';
     categorias[cat] = (categorias[cat] || 0) + 1;
   });
+
+  const dificuldades = { 'Fácil': 1, 'Médio': 2, 'Difícil': 3 };
+  const somaD = chefRecipes.reduce((acc, item) => acc + (dificuldades[item.dificuldade] || 2), 0);
+  const mediaD = totalReceitas > 0 ? (somaD / totalReceitas).toFixed(1) : 0;
+  const nivelTexto = mediaD <= 1.5 ? 'Fácil' : mediaD <= 2.5 ? 'Médio' : 'Difícil';
 
   return (
     <div className="chef-profile">
@@ -64,9 +142,11 @@ export default function ChefProfile() {
         <div className="perfil-info">
           <div className="avatar">👨‍🍳</div>
           <div>
-            <h1>{chefe.nome}</h1>
-            <p>🍽 {chefe.especialidade}</p>
-            <p style={{ color: '#888', fontSize: '14px' }}>📍 {chefe.localizacao}</p>
+            <h1>{chef.nomeCompleto}</h1>
+            <p>🍽 {chef.nomeUsuario}</p>
+            <p style={{ color: '#888', fontSize: '14px' }}>
+              {chef.gmail || 'Sem e-mail cadastrado'}
+            </p>
           </div>
         </div>
         <button className="btn-editar" onClick={() => setIsEditing(!isEditing)}>
@@ -74,18 +154,34 @@ export default function ChefProfile() {
         </button>
       </section>
 
+      {(fetchError || debugInfo.length > 0) && (
+        <section className="perfil-debug" style={{ margin: '16px 0', padding: '14px', backgroundColor: '#fff4e5', borderRadius: '12px', border: '1px solid #ffd8a8' }}>
+          {fetchError && <p style={{ margin: 0, color: '#9a3412', fontWeight: 'bold' }}>{fetchError}</p>}
+          {debugInfo.length > 0 && (
+            <div style={{ marginTop: '12px' }}>
+              <strong>Debug API</strong>
+              <ul style={{ margin: '8px 0 0 16px', padding: 0, listStyleType: 'disc', color: '#6b4226' }}>
+                {debugInfo.map((line, index) => (
+                  <li key={index} style={{ marginBottom: '4px' }}><code>{line}</code></li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )}
+
       {/* EDIÇÃO */}
       {isEditing && (
         <section className="perfil-edicao">
           <div className="perfil-info">
             <div className="avatar">👨‍🍳</div>
             <div className="inputs">
-              <input type="text" placeholder="Nome" defaultValue={chefe.nome} />
-              <input type="email" placeholder="E-mail" defaultValue={chefe.email || ''} />
-              <input type="text" placeholder="Especialidade" defaultValue={chefe.especialidade} />
-              <input type="text" placeholder="Localização" defaultValue={chefe.localizacao} />
+              <input type="text" placeholder="Nome" defaultValue={chef.nomeCompleto} />
+              <input type="email" placeholder="E-mail" defaultValue={chef.gmail || ''} />
+              <input type="text" placeholder="Usuário" defaultValue={chef.nomeUsuario} />
+              <input type="text" placeholder="Idade" defaultValue={chef.idade || ''} />
               <textarea placeholder="Bio" style={{ width: '250px', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', resize: 'vertical' }}>
-                {chefe.bio || ''}
+                {chef.bio || ''}
               </textarea>
             </div>
           </div>
@@ -126,14 +222,25 @@ export default function ChefProfile() {
           </div>
           {chefRecipes.length > 0 ? (
             <div className="recipes-grid">
-                {chefRecipes.map(({ id, recipe }) => (
-                  <RecipeCard
-                    key={id}
-                    recipe={recipe}
-                    id={id}
-                    isFavorite={favorites.includes(id)}
-                  />
-                ))}
+                {chefRecipes.map(recipe => {
+                  const cardData = {
+                    ...recipe,
+                    nome: recipe.nomeReceita,
+                    descricao: recipe.descricao,
+                    imagem: recipe.fotoReceita,
+                    chef: chef.nomeCompleto,
+                    categoria: recipe.categorias?.[0]?.nomeCategoria || 'Geral',
+                    dificuldade: recipe.dificuldade || 'Médio',
+                  };
+                  return (
+                    <RecipeCard
+                      key={recipe.codReceitas}
+                      recipe={cardData}
+                      id={recipe.codReceitas.toString()}
+                      isFavorite={favorites.includes(recipe.codReceitas.toString())}
+                    />
+                  );
+                })}
             </div>
           ) : (
             <p style={{ color: '#888' }}>Nenhuma receita publicada ainda.</p>

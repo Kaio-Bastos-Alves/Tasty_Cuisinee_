@@ -186,6 +186,43 @@
   margin: 0 auto;
 }
 
+.recipe-manage-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recipe-actions-admin {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-delete {
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: transform 0.2s ease, background 0.2s ease;
+  box-shadow: 0 4px 10px rgba(231, 76, 60, 0.18);
+}
+
+.btn-delete:hover {
+  background: #c0392b;
+  transform: translateY(-1px);
+}
+
+.btn-delete:active {
+  transform: translateY(0);
+}
+
+.btn-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* CONFIGURAÇÕES */
 .configuracoes {
   display: grid;

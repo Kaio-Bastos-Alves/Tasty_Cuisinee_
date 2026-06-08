@@ -12,6 +12,8 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [dbRecipes, setDbRecipes] = useState([]);
   const [dbFavorites, setDbFavorites] = useState([]);
+  const [fetchError, setFetchError] = useState(null);
+  const [debugInfo, setDebugInfo] = useState([]);
   const [formData, setFormData] = useState({
     id: 0, nomeCompleto: '', username: '', idade: 14, gmail: '', senha: '', restricoesAlimentares: '', fotoPerfil: null
   });
@@ -22,10 +24,18 @@ export default function Profile() {
 
   useEffect(() => {
     async function loadProfile() {
+      const debug = [];
       if (!userId) { setLocation('/login'); return; }
+      debug.push(`userId=${userId}`);
+      debug.push(`userType=${userType}`);
+
       try {
         const api = userType === 'chefe' ? chefesAPI : usuariosAPI;
         const response = await api.getById(userId);
+        debug.push(`profile getById status=${response.status}`);
+        if (response.error) {
+          debug.push(`profile error=${response.error}`);
+        }
         if (response.data) {
           const d = response.data;
           setFormData({
@@ -36,19 +46,69 @@ export default function Profile() {
             restricoesAlimentares: d.restricoesAlimentares || '', fotoPerfil: d.fotoPerfil || null
           });
         }
+
         if (userType === 'chefe') {
-          const recipesRes = await apiCall(`/receita/chefe/${userId}`);
-          if (recipesRes.data) {
-            setDbRecipes(recipesRes.data);
+          const recipesRes = await receitasAPI.getByChef(userId);
+          debug.push(`recipes getByChef status=${recipesRes.status}`);
+          if (recipesRes.error) {
+            debug.push(`recipes error=${recipesRes.error}`);
+            setFetchError('Erro ao carregar suas receitas do backend.');
+          }
+
+          const recipesData = Array.isArray(recipesRes.data)
+            ? recipesRes.data
+            : Array.isArray(recipesRes.data?.content)
+              ? recipesRes.data.content
+              : [];
+          debug.push(`recipes returned type=${typeof recipesRes.data} count=${Array.isArray(recipesData) ? recipesData.length : 'n/a'}`);
+
+          if (recipesData.length === 0) {
+            debug.push('fallback: carregar todas as receitas e filtrar pelo chefe');
+            const allRes = await receitasAPI.getAll();
+            debug.push(`getAll status=${allRes.status}`);
+            if (allRes.error) {
+              debug.push(`getAll error=${allRes.error}`);
+            }
+            const allData = Array.isArray(allRes.data)
+              ? allRes.data
+              : Array.isArray(allRes.data?.content)
+                ? allRes.data.content
+                : [];
+            const filtered = allData.filter(recipe =>
+              recipe?.chefe?.codChefe === Number(userId)
+              || Number(recipe?.chefe?.codChefe) === Number(userId)
+            );
+            debug.push(`fallback filter count=${filtered.length}`);
+            if (filtered.length > 0) {
+              setDbRecipes(filtered);
+            } else {
+              setDbRecipes(recipesData);
+              if (!fetchError) {
+                setFetchError('Nenhuma receita encontrada para este chefe.');
+              }
+            }
+          } else {
+            setDbRecipes(recipesData);
           }
         } else {
           const favsRes = await apiCall(`/favorito/usuario/${userId}`);
+          debug.push(`favorites get status=${favsRes.status}`);
+          if (favsRes.error) {
+            debug.push(`favorites error=${favsRes.error}`);
+          }
           if (favsRes.data) {
             setDbFavorites(favsRes.data.map(f => f.receita));
           }
         }
-      } catch (error) { console.error(error); }
-      setLoading(false);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        debug.push(`catch error=${message}`);
+        console.error(error);
+        setFetchError('Erro ao carregar o perfil. Veja o debug abaixo para mais detalhes.');
+      } finally {
+        setDebugInfo(debug);
+        setLoading(false);
+      }
     }
     loadProfile();
   }, [userId, userType, setLocation]);
@@ -96,34 +156,46 @@ export default function Profile() {
    const handleDeleteRecipe = async (recipeId) => {
     if (window.confirm("Tem certeza que deseja excluir esta receita? Isso removerá todos os comentários, avaliações e favoritos vinculados a ela.")) {
       try {
+        const safeArray = (value) => Array.isArray(value) ? value : [];
+
         // 1. Buscar e deletar Comentários vinculados
         const commentsRes = await apiCall('/comentario/findAll');
-        if (commentsRes.data) {
-          const toDelete = commentsRes.data.filter(c => c.receita && c.receita.codReceitas.toString() === recipeId);
-          for (const c of toDelete) { await apiCall(`/comentario/${c.codComentarios}`, { method: 'DELETE' }); }
+        const comments = safeArray(commentsRes.data);
+        if (commentsRes.error) {
+          console.warn('comments fetch error:', commentsRes.error, 'status:', commentsRes.status);
+        }
+        for (const c of comments.filter(c => c?.receita?.codReceitas?.toString() === recipeId)) {
+          await apiCall(`/comentario/${c.codComentarios}`, { method: 'DELETE' });
         }
 
         // 2. Buscar e deletar Avaliações vinculadas
         const ratingsRes = await apiCall('/avaliacao/findAll');
-        if (ratingsRes.data) {
-          const toDelete = ratingsRes.data.filter(a => a.receita && a.receita.codReceitas.toString() === recipeId);
-          for (const a of toDelete) { await apiCall(`/avaliacao/${a.codAvaliacao}`, { method: 'DELETE' }); }
+        const ratings = safeArray(ratingsRes.data);
+        if (ratingsRes.error) {
+          console.warn('ratings fetch error:', ratingsRes.error, 'status:', ratingsRes.status);
+        }
+        for (const a of ratings.filter(a => a?.receita?.codReceitas?.toString() === recipeId)) {
+          await apiCall(`/avaliacao/${a.codAvaliacao}`, { method: 'DELETE' });
         }
 
         // 3. Buscar e deletar Favoritos vinculados
         const favsRes = await apiCall('/favorito/findAll');
-        if (favsRes.data) {
-          const toDelete = favsRes.data.filter(f => f.receita && f.receita.codReceitas.toString() === recipeId);
-          for (const f of toDelete) { await apiCall(`/favorito/${f.codFavoritos}`, { method: 'DELETE' }); }
+        const favoritesToDelete = safeArray(favsRes.data);
+        if (favsRes.error) {
+          console.warn('favorites fetch error:', favsRes.error, 'status:', favsRes.status);
+        }
+        for (const f of favoritesToDelete.filter(f => f?.receita?.codReceitas?.toString() === recipeId)) {
+          await apiCall(`/favorito/${f.codFavoritos}`, { method: 'DELETE' });
         }
 
         // 4. Finalmente, deletar a Receita
         const response = await receitasAPI.delete(recipeId);
         if (!response.error) {
           setDbRecipes(prev => prev.filter(r => r.codReceitas.toString() !== recipeId));
-          alert("Receita e todos os seus dados vinculados foram excluídos com sucesso!");
+          alert("Receita excluída com sucesso!");
         } else {
-          alert("Erro ao excluir a receita. Verifique o console para mais detalhes.");
+          console.error('delete error:', response.error, 'status:', response.status);
+          alert("Não foi possível excluir a receita. Verifique o console para mais detalhes.");
         }
       } catch (error) {
         console.error("Erro na exclusão em cascata:", error);
@@ -154,6 +226,22 @@ export default function Profile() {
           {isEditing ? 'Cancelar' : '✏️ Editar Perfil'}
         </button>
       </section>
+
+      {(fetchError || debugInfo.length > 0) && (
+        <section className="perfil-debug" style={{ margin: '16px 0', padding: '14px', borderRadius: '12px', backgroundColor: '#fff4e5', border: '1px solid #ffd8a8' }}>
+          {fetchError && <p style={{ margin: 0, color: '#9a3412', fontWeight: 'bold' }}>{fetchError}</p>}
+          {debugInfo.length > 0 && (
+            <div style={{ marginTop: '12px' }}>
+              <strong>Debug de Carregamento</strong>
+              <ul style={{ margin: '8px 0 0 16px', padding: 0, listStyleType: 'disc', color: '#6b4226' }}>
+                {debugInfo.map((line, index) => (
+                  <li key={index} style={{ marginBottom: '4px' }}><code>{line}</code></li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )}
 
       {isEditing && (
         <section className="perfil-edicao">
@@ -199,7 +287,7 @@ export default function Profile() {
                   <div key={recipe.id} className="recipe-manage-card">
                     <RecipeCard recipe={recipe} id={recipe.id} isFavorite={favorites.includes(recipe.id)} onToggleFavorite={toggleFavorite} />
                     <div className="recipe-actions-admin">
-                      <button className="btn-delete" onClick={() => handleDeleteRecipe(recipe.id)}>🗑️ Excluir</button>
+                      <button type="button" className="btn-delete" onClick={() => handleDeleteRecipe(recipe.id)}>🗑️ Excluir</button>
                     </div>
                   </div>
                 ))
