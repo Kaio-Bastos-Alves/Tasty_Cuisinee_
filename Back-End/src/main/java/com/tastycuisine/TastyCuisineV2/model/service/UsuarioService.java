@@ -32,12 +32,24 @@ public class UsuarioService {
     //atualizar usuario
     public Usuario update(long codUser, Usuario usuario) {
         Usuario usuarioExistente = findById(codUser);
-        usuarioExistente.setNomeCompleto(usuario.getNomeCompleto());
-        usuarioExistente.setNomeDeUsuario(usuario.getNomeDeUsuario());
-        usuarioExistente.setGmail(usuario.getGmail());
-        usuarioExistente.setIdade(usuario.getIdade());
-        usuarioExistente.setSenha(usuario.getSenha());
-        usuarioExistente.setRestricoesAlimentares(usuario.getRestricoesAlimentares());
+        if (usuario.getNomeCompleto() != null && !usuario.getNomeCompleto().isBlank()) {
+            usuarioExistente.setNomeCompleto(usuario.getNomeCompleto());
+        }
+        if (usuario.getNomeDeUsuario() != null && !usuario.getNomeDeUsuario().isBlank()) {
+            usuarioExistente.setNomeDeUsuario(usuario.getNomeDeUsuario());
+        }
+        if (usuario.getGmail() != null && !usuario.getGmail().isBlank()) {
+            usuarioExistente.setGmail(usuario.getGmail());
+        }
+        if (usuario.getIdade() > 0) {
+            usuarioExistente.setIdade(usuario.getIdade());
+        }
+        if (usuario.getSenha() != null && !usuario.getSenha().isBlank()) {
+            usuarioExistente.setSenha(usuario.getSenha());
+        }
+        if (usuario.getRestricoesAlimentares() != null) {
+            usuarioExistente.setRestricoesAlimentares(usuario.getRestricoesAlimentares());
+        }
         return usuarioRepository.save(usuarioExistente);
     }
     

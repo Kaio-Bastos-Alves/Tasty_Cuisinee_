@@ -29,40 +29,33 @@ public class ChefeController {
     }
 
     @GetMapping("/{codChefe}")
-    public ResponseEntity<Object> findById(@PathVariable String codChefe) {
+    public ResponseEntity<Object> findById(@PathVariable Long codChefe) {
         try {
-            return ResponseEntity.ok(chefeService.findById(Long.parseLong(codChefe)));
-        } catch (NumberFormatException e) {
-            return ResponseEntity.badRequest().body(Map.of("status", 400, "error", "bad request", "message", "o id informado não é válido: " + codChefe));
+            return ResponseEntity.ok(chefeService.findById(codChefe));
         } catch (RuntimeException e) {
             return ResponseEntity.status(404).body(Map.of("status", 404, "error", "not found", "message", "chefe não encontrado com o id: " + codChefe));
         }
     }
 
     @PutMapping("/{codChefe}")
-    public ResponseEntity<Object> update(@Valid @RequestBody Chefe chefe, @PathVariable String codChefe) {
+    public ResponseEntity<Object> update(@RequestBody Chefe chefe, @PathVariable Long codChefe) {
         try {
-            return ResponseEntity.ok(chefeService.update(Long.parseLong(codChefe), chefe));
-        } catch (NumberFormatException e) {
-            return ResponseEntity.badRequest().body(Map.of("status", 400, "error", "bad request", "message", "o id informado não é válido: " + codChefe));
+            return ResponseEntity.ok(chefeService.update(codChefe, chefe));
         } catch (RuntimeException e) {
             return ResponseEntity.status(404).body(Map.of("status", 404, "error", "not found", "message", "chefe não encontrado com o id: " + codChefe));
         }
     }
 
     @DeleteMapping("/{codChefe}")
-    public ResponseEntity<Object> delete(@PathVariable String codChefe) {
+    public ResponseEntity<Object> delete(@PathVariable Long codChefe) {
         try {
-            chefeService.delete(Long.parseLong(codChefe));
+            chefeService.delete(codChefe);
             return ResponseEntity.ok().body("Chefe com o id " + codChefe + " foi removido com sucesso");
-        } catch (NumberFormatException e) {
-            return ResponseEntity.badRequest().body(Map.of("status", 400, "error", "bad request", "message", "o id informado não é válido: " + codChefe));
         } catch (RuntimeException e) {
             return ResponseEntity.status(404).body(Map.of("status", 404, "error", "not found", "message", "chefe não encontrado com o id: " + codChefe));
         }
     }
 
-    //login de chefe
     @PostMapping("/login")
     public ResponseEntity<Object> login(@RequestBody Map<String, String> body) {
         try {

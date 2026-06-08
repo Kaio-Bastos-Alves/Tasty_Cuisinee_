@@ -26,7 +26,7 @@ CREATE TABLE Chefe (
     Idade INT NOT NULL,
     Senha NVARCHAR(250) NOT NULL,
     Gmail NVARCHAR(255) NOT NULL UNIQUE,
-    foto_perfil VARBINARY(MAX)
+    foto_perfil NVARCHAR(MAX) NULL
 );
  
 -- 4. Tabela de Categorias

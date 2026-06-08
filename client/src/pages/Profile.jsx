@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, Link } from 'wouter';
-import { receitasAPI, usuariosAPI, chefesAPI, apiCall } from '../lib/api.ts'; 
+import { receitasAPI, usuariosAPI, chefesAPI, apiCall, API_ENDPOINTS } from '../lib/api.ts'; 
 import RecipeCard from '../components/RecipeCard.jsx';
-import { useFavorites } from '../hooks/useFavorites.js';
+import { normalizeFavoritesResponse, useFavorites } from '../hooks/useFavorites.js';
 import '../styles/profile.css';
 
 export default function Profile() {
@@ -14,13 +14,31 @@ export default function Profile() {
   const [dbFavorites, setDbFavorites] = useState([]);
   const [fetchError, setFetchError] = useState(null);
   const [debugInfo, setDebugInfo] = useState([]);
+  const [showDebug, setShowDebug] = useState(false);
+  const [photoEditorOpen, setPhotoEditorOpen] = useState(false);
+  const [photoDraft, setPhotoDraft] = useState('');
   const [formData, setFormData] = useState({
-    id: 0, nomeCompleto: '', username: '', idade: 14, gmail: '', senha: '', restricoesAlimentares: '', fotoPerfil: null
+    id: 0, nomeCompleto: '', username: '', idade: 14, gmail: '', senha: '', restricoesAlimentares: ''
   });
 
   const userId = localStorage.getItem('userId');
   const userType = localStorage.getItem('userType');
   const { favorites, toggleFavorite } = useFavorites();
+
+  const loadUserFavorites = async (debug = []) => {
+    const favsRes = await apiCall(`${API_ENDPOINTS.FAVORITOS}/usuario/${userId}`);
+    debug.push(`favorites get status=${favsRes.status}`);
+    if (favsRes.error) {
+      debug.push(`favorites error=${favsRes.error}`);
+    }
+    if (favsRes.data) {
+      const normalized = normalizeFavoritesResponse(favsRes.data);
+      setDbFavorites(normalized.list.map(f => f.receita).filter(Boolean));
+      debug.push(`favorites normalized count=${normalized.list.length}`);
+    } else {
+      setDbFavorites([]);
+    }
+  };
 
   useEffect(() => {
     async function loadProfile() {
@@ -43,8 +61,9 @@ export default function Profile() {
             nomeCompleto: d.nomeCompleto || '',
             username: userType === 'chefe' ? d.nomeUsuario : d.nomeDeUsuario,
             idade: d.idade || 14, gmail: d.gmail || '', senha: d.senha || '',
-            restricoesAlimentares: d.restricoesAlimentares || '', fotoPerfil: d.fotoPerfil || null
+            restricoesAlimentares: d.restricoesAlimentares || ''
           });
+          setPhotoDraft(userType === 'chefe' ? (d.fotoPerfil || '') : '');
         }
 
         if (userType === 'chefe') {
@@ -91,14 +110,7 @@ export default function Profile() {
             setDbRecipes(recipesData);
           }
         } else {
-          const favsRes = await apiCall(`/favorito/usuario/${userId}`);
-          debug.push(`favorites get status=${favsRes.status}`);
-          if (favsRes.error) {
-            debug.push(`favorites error=${favsRes.error}`);
-          }
-          if (favsRes.data) {
-            setDbFavorites(favsRes.data.map(f => f.receita));
-          }
+          await loadUserFavorites(debug);
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
@@ -113,6 +125,27 @@ export default function Profile() {
     loadProfile();
   }, [userId, userType, setLocation]);
 
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'F11') {
+        event.preventDefault();
+        setShowDebug(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (userType === 'usuario' && !loading) {
+      const debug = [];
+      loadUserFavorites(debug).catch((error) => {
+        console.error(error);
+      });
+    }
+  }, [favorites, userType]);
+
   const normalizedChefRecipes = useMemo(() => dbRecipes.map(recipe => ({
     id: recipe.codReceitas.toString(), nome: recipe.nomeReceita, descricao: recipe.descricao,
     imagem: recipe.fotoReceita || '/images/receita1.jpg', tempo: '30 min', chef: formData.nomeCompleto, dificuldade: 'Médio', categoria: 'Geral'
@@ -123,24 +156,36 @@ export default function Profile() {
     imagem: recipe.fotoReceita || '/images/receita1.jpg', tempo: '30 min', chef: recipe.chefe?.nomeCompleto || 'Chef Tasty', dificuldade: 'Médio', categoria: 'Geral'
   })), [dbFavorites]);
 
-  const handleSaveProfile = async () => {
+  const requestPassword = (title = 'Confirme sua senha') => {
+    const password = window.prompt(`${title} para salvar as alterações:`);
+    if (password === null) return null;
+    if (!password.trim()) {
+      alert('A senha não pode ficar em branco.');
+      return null;
+    }
+    return password.trim();
+  };
+
+  const handleSaveProfile = async (overrideData = null, passwordOverride = null) => {
+    const data = overrideData || formData;
+    const password = passwordOverride ?? requestPassword();
+    if (!password) return;
     const api = userType === 'chefe' ? chefesAPI : usuariosAPI;
     let payload = userType === 'chefe' ? {
       codChefe: Number(userId),
-      nomeUsuario: formData.username,
-      nomeCompleto: formData.nomeCompleto,
-      idade: Number(formData.idade),
-      gmail: formData.gmail,
-      senha: formData.senha,
-      fotoPerfil: formData.fotoPerfil
+      nomeUsuario: data.username,
+      nomeCompleto: data.nomeCompleto,
+      idade: Number(data.idade),
+      gmail: data.gmail,
+      senha: password,
     } : {
       codUser: Number(userId),
-      nomeDeUsuario: formData.username,
-      nomeCompleto: formData.nomeCompleto,
-      idade: Number(formData.idade),
-      gmail: formData.gmail,
-      senha: formData.senha,
-      restricoesAlimentares: formData.restricoesAlimentares
+      nomeDeUsuario: data.username,
+      nomeCompleto: data.nomeCompleto,
+      idade: Number(data.idade),
+      gmail: data.gmail,
+      senha: password,
+      restricoesAlimentares: data.restricoesAlimentares,
     };
 
     const response = await api.update(userId, payload);
@@ -151,6 +196,30 @@ export default function Profile() {
     } else {
       alert("Erro ao atualizar perfil.");
     }
+  };
+
+  const openPhotoEditor = () => {
+    setPhotoDraft(formData.fotoPerfil || '');
+    setPhotoEditorOpen(true);
+  };
+
+  const confirmPhotoEditor = () => {
+    const nextFormData = {
+      ...formData,
+      fotoPerfil: photoDraft.trim(),
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      fotoPerfil: photoDraft.trim(),
+    }));
+    setPhotoEditorOpen(false);
+    handleSaveProfile(nextFormData);
+  };
+
+  const cancelPhotoEditor = () => {
+    setPhotoDraft(formData.fotoPerfil || '');
+    setPhotoEditorOpen(false);
   };
 
    const handleDeleteRecipe = async (recipeId) => {
@@ -179,13 +248,13 @@ export default function Profile() {
         }
 
         // 3. Buscar e deletar Favoritos vinculados
-        const favsRes = await apiCall('/favorito/findAll');
+        const favsRes = await apiCall(API_ENDPOINTS.FAVORITOS_ALL);
         const favoritesToDelete = safeArray(favsRes.data);
         if (favsRes.error) {
           console.warn('favorites fetch error:', favsRes.error, 'status:', favsRes.status);
         }
         for (const f of favoritesToDelete.filter(f => f?.receita?.codReceitas?.toString() === recipeId)) {
-          await apiCall(`/favorito/${f.codFavoritos}`, { method: 'DELETE' });
+          await apiCall(API_ENDPOINTS.FAVORITO_BY_ID(f.codFavoritos), { method: 'DELETE' });
         }
 
         // 4. Finalmente, deletar a Receita
@@ -216,7 +285,16 @@ export default function Profile() {
     <div className="perfil">
       <section className="perfil-header">
         <div className="perfil-info">
-          <div className="avatar">{userType === 'chefe' ? '👨‍🍳' : '👤'}</div>
+          <div className="avatar avatar-photo">
+            {formData.fotoPerfil ? (
+              <img src={formData.fotoPerfil} alt={formData.nomeCompleto || 'Foto de perfil'} />
+            ) : (
+              <span>{userType === 'chefe' ? '👨‍🍳' : '👤'}</span>
+            )}
+            <button type="button" className="avatar-edit-btn" onClick={openPhotoEditor}>
+              Alterar foto
+            </button>
+          </div>
           <div>
             <h1>{formData.nomeCompleto}</h1>
             <p>{formData.gmail} | {userType === 'chefe' ? 'Chef Profissional' : `${formData.idade} anos`}</p>
@@ -227,7 +305,33 @@ export default function Profile() {
         </button>
       </section>
 
-      {(fetchError || debugInfo.length > 0) && (
+      {photoEditorOpen && (
+        <section className="photo-editor-panel">
+          <div className="photo-editor-card">
+            <h3>Alterar foto do perfil</h3>
+            <label>URL da foto</label>
+            <input
+              type="url"
+              placeholder="https://..."
+              value={photoDraft}
+              onChange={(e) => setPhotoDraft(e.target.value)}
+            />
+            <div className="photo-preview">
+              {photoDraft ? (
+                <img src={photoDraft} alt="Pré-visualização da foto de perfil" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+              ) : (
+                <span>Sem imagem</span>
+              )}
+            </div>
+            <div className="photo-editor-actions">
+              <button type="button" className="btn-salvar" onClick={confirmPhotoEditor}>Confirmar</button>
+              <button type="button" className="btn-outline" onClick={cancelPhotoEditor}>Cancelar</button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {showDebug && (fetchError || debugInfo.length > 0) && (
         <section className="perfil-debug" style={{ margin: '16px 0', padding: '14px', borderRadius: '12px', backgroundColor: '#fff4e5', border: '1px solid #ffd8a8' }}>
           {fetchError && <p style={{ margin: 0, color: '#9a3412', fontWeight: 'bold' }}>{fetchError}</p>}
           {debugInfo.length > 0 && (
@@ -260,7 +364,7 @@ export default function Profile() {
                 <input name="restricoesAlimentares" type="text" value={formData.restricoesAlimentares} onChange={handleChange} />
               </>
             )}
-            <button className="btn-salvar" onClick={handleSaveProfile}>Salvar Alterações</button>
+            <button className="btn-salvar" onClick={() => handleSaveProfile()}>Salvar Alterações</button>
           </div>
         </section>
       )}
@@ -293,8 +397,13 @@ export default function Profile() {
                 ))
               ) : <p>Você ainda não publicou nenhuma receita.</p>
             ) : (
-              favorites.length > 0 ? favorites.map(id => <RecipeCard key={id} id={id} isFavorite={true} onToggleFavorite={toggleFavorite} />) : <p>Nenhum favorito encontrado.</p>
-            )}
+              normalizedUserFavorites.length > 0 ? (
+                normalizedUserFavorites.map(recipe => (
+                  <RecipeCard key={recipe.id} recipe={recipe} id={recipe.id} isFavorite={favorites.includes(recipe.id)} onToggleFavorite={toggleFavorite} />
+                ))
+              ) : <p>Nenhum favorito encontrado.</p>
+            )
+          }
           </div>
         </section>
       )}

@@ -1,17 +1,60 @@
-import { useState, useEffect } from 'react';
-import { chefesAPI } from '../lib/api.ts';
+import { useEffect, useMemo, useState } from 'react';
+import { chefesAPI, receitasAPI } from '../lib/api.ts';
 import ChefCard from '../components/ChefCard.jsx';
 import '../styles/chefs.css';
 
+function normalizeList(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.content)) return data.content;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
+}
+
 export default function Chefs() {
   const [chefes, setChefes] = useState([]);
+  const [receitas, setReceitas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState('');
 
   useEffect(() => {
-    chefesAPI.getAll().then(res => {
-      if (res.data) setChefes(res.data);
-    }).finally(() => setLoading(false));
+    let mounted = true;
+
+    const loadData = async () => {
+      setLoading(true);
+      setFetchError('');
+      try {
+        const [chefesRes, receitasRes] = await Promise.all([chefesAPI.getAll(), receitasAPI.getAll()]);
+        if (chefesRes.error || receitasRes.error) {
+          if (mounted) setFetchError('Erro ao carregar os dados do banco de dados.');
+        }
+        if (mounted) {
+          setChefes(normalizeList(chefesRes.data));
+          setReceitas(normalizeList(receitasRes.data));
+        }
+      } catch (error) {
+        if (mounted) {
+          setFetchError('Erro ao carregar os dados do banco de dados.');
+          setChefes([]);
+          setReceitas([]);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadData();
+    return () => {
+      mounted = false;
+    };
   }, []);
+
+  const chefCards = useMemo(() => {
+    return chefes.map((chef) => {
+      const chefId = Number(chef.codChefe);
+      const totalReceitas = receitas.filter((receita) => Number(receita?.chefe?.codChefe) === chefId).length;
+      return { ...chef, totalReceitas };
+    });
+  }, [chefes, receitas]);
 
   if (loading) return <div className="chefs-page">Carregando chefes...</div>;
 
@@ -22,13 +65,18 @@ export default function Chefs() {
         <p>Conheça os mestres culinários por trás das nossas receitas incríveis.</p>
       </div>
 
+      {fetchError ? <p style={{ color: '#9a3412', marginBottom: '16px' }}>{fetchError}</p> : null}
+
       <div className="chefs-grid">
-        {chefes.map(chef => (
-          <ChefCard key={chef.codChefe} chef={chef} id={chef.codChefe} />
-        ))}
+        {chefCards.length > 0 ? (
+          chefCards.map((chef) => (
+            <ChefCard key={chef.codChefe} chef={chef} id={chef.codChefe} />
+          ))
+        ) : (
+          <p>Nenhum chefe encontrado.</p>
+        )}
       </div>
 
-      {/* SEÇÃO SOBRE OS CHEFES - TRADIÇÃO */}
       <section className="tradicao">
         <div className="tradicao-texto">
           <h2>A tradição encontra a inovação</h2>

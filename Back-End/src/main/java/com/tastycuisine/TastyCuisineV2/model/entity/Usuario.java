@@ -55,4 +55,5 @@ public class Usuario {
 
     @Column(name = "Restricoes_alimentares", nullable = true, columnDefinition = "NVARCHAR(MAX)")
     private String restricoesAlimentares;
+
 }

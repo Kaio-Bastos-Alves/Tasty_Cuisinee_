@@ -92,8 +92,15 @@ export default function RecipeDetail() {
         <img src={recipe.fotoReceita || recipe.imagem || '/images/receita1.jpg'} alt={recipe.nomeReceita} />
         <div className="recipe-hero-info">
           <h1>{recipe.nomeReceita}</h1>
-          <button className={`btn-save ${favorites.includes(String(recipe.codReceitas)) ? 'saved' : ''}`} onClick={() => toggleFavorite(String(recipe.codReceitas))}>
-            {favorites.includes(String(recipe.codReceitas)) ? '♥ Salva' : '♡ Salvar'}
+          <button
+            type="button"
+            className={`btn-save ${favorites.includes(String(recipe.codReceitas)) ? 'saved' : ''}`}
+            onClick={() => toggleFavorite(String(recipe.codReceitas))}
+            aria-pressed={favorites.includes(String(recipe.codReceitas))}
+            aria-label={favorites.includes(String(recipe.codReceitas)) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+          >
+            <span className="heart">{favorites.includes(String(recipe.codReceitas)) ? '♥' : '♡'}</span>
+            <span className="save-label">{favorites.includes(String(recipe.codReceitas)) ? ' Salva' : ' Salvar'}</span>
           </button>
         </div>
       </div>

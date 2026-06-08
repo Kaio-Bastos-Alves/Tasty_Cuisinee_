@@ -35,6 +35,111 @@
   border-radius: 50%;
 }
 
+.avatar-photo {
+  position: relative;
+  overflow: hidden;
+  background: #f6efe6;
+}
+
+.avatar-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.avatar-edit-btn {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  border: none;
+  background: rgba(16, 11, 7, 0.72);
+  color: #fff;
+  font-size: 11px;
+  padding: 4px 6px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 180ms ease, background 180ms ease;
+}
+
+.avatar-photo:hover .avatar-edit-btn {
+  opacity: 1;
+}
+
+.avatar-edit-btn:hover {
+  background: rgba(242, 122, 26, 0.92);
+}
+
+.photo-editor-panel {
+  position: sticky;
+  top: 20px;
+  z-index: 10;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.photo-editor-card {
+  width: min(100%, 420px);
+  background: #fff;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 16px 40px rgba(43, 24, 11, 0.16);
+  border: 1px solid rgba(242, 122, 26, 0.12);
+}
+
+.photo-editor-card h3 {
+  margin: 0 0 12px;
+  font-family: 'Playfair Display', serif;
+  color: #F27A1A;
+  font-size: 1.25rem;
+}
+
+.photo-editor-card label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #6b5f57;
+}
+
+.photo-editor-card input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  margin-bottom: 14px;
+}
+
+.photo-preview {
+  height: 180px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #fffaf5 0%, #f6efe6 100%);
+  border: 1px dashed rgba(242, 122, 26, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  color: #8c7d72;
+}
+
+.photo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-editor-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.photo-editor-actions .btn-outline {
+  border: 1px solid #ddd;
+}
+
 .perfil-info h1 {
   font-family: 'Playfair Display', serif;
   font-size: 1.8rem;

@@ -1,32 +1,50 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { receitasAPI } from '../lib/api';
 import { useFavorites } from '../hooks/useFavorites.js';
+import { useDebugMode } from '../hooks/useDebugMode.js';
 import RecipeCard from '../components/RecipeCard.jsx';
+import DebugPanel from '../components/DebugPanel.jsx';
 import '../styles/recipes.css';
 
 export default function Recipes() {
   const { favorites = [], toggleFavorite } = useFavorites();
+  const { showDebug } = useDebugMode();
   const [searchTerm, setSearchTerm] = useState('');
   const [dbRecipes, setDbRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [debugInfo, setDebugInfo] = useState([]);
+  const [fetchError, setFetchError] = useState('');
 
   useEffect(() => {
     const fetchRecipes = async () => {
       try {
         const response = await receitasAPI.getAll();
-        // VERIFICAÇÃO DE SEGURANÇA: Garante que dbRecipes seja sempre um Array
+        const debug = [`receitas status=${response.status}`];
+
         if (response && Array.isArray(response.data)) {
           setDbRecipes(response.data);
+          debug.push(`receitas count=${response.data.length}`);
         } else {
           setDbRecipes([]);
+          setFetchError('Nenhuma receita foi carregada do backend.');
         }
+
+        if (response.error) {
+          debug.push(`error=${response.error}`);
+        }
+
+        setDebugInfo(debug);
       } catch (err) {
-        console.error("Erro ao buscar receitas:", err);
+        const message = err instanceof Error ? err.message : String(err);
+        console.error('Erro ao buscar receitas:', err);
         setDbRecipes([]);
+        setFetchError(`Erro ao buscar receitas: ${message}`);
+        setDebugInfo([`catch=${message}`]);
       } finally {
         setLoading(false);
       }
     };
+
     fetchRecipes();
   }, []);
 
@@ -45,8 +63,8 @@ export default function Recipes() {
   }, [dbRecipes]);
 
   const filteredRecipes = useMemo(() => {
-    return normalizedRecipes.filter(r => 
-      r.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    return normalizedRecipes.filter(r =>
+      r.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       r.chef.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [searchTerm, normalizedRecipes]);
@@ -83,6 +101,7 @@ export default function Recipes() {
           <div className="no-results"><p>Nenhuma receita encontrada.</p></div>
         )}
       </div>
+      <DebugPanel visible={showDebug} error={fetchError} lines={debugInfo} />
     </div>
   );
 }

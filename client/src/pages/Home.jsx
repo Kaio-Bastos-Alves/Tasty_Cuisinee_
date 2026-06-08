@@ -3,19 +3,34 @@ import { Link } from 'wouter';
 import { receitasAPI } from '../lib/api.ts';
 import { useFavorites } from '../hooks/useFavorites.js';
 import { useAuth } from '../hooks/useAuth.js';
+import { useDebugMode } from '../hooks/useDebugMode.js';
 import RecipeCard from '../components/RecipeCard.jsx';
+import DebugPanel from '../components/DebugPanel.jsx';
 import '../styles/home.css';
 
 export default function Home() {
   const { favorites, toggleFavorite } = useFavorites();
   const { isLogged } = useAuth();
   const [receitas, setReceitas] = useState([]);
+  const [debugInfo, setDebugInfo] = useState([]);
+  const [fetchError, setFetchError] = useState('');
+  const { showDebug } = useDebugMode();
 
   useEffect(() => {
     if (isLogged) {
       receitasAPI.getAll().then(res => {
-        if (res.data) setReceitas(res.data.slice(0, 4));
+        const debug = [`isLogged=${isLogged}`, `receitas status=${res.status}`];
+        if (res.error) debug.push(`error=${res.error}`);
+        if (res.data) {
+          setReceitas(res.data.slice(0, 4));
+          debug.push(`receitas count=${Array.isArray(res.data) ? res.data.length : 'n/a'}`);
+        } else {
+          setFetchError('Erro ao carregar receitas em destaque.');
+        }
+        setDebugInfo(debug);
       });
+    } else {
+      setDebugInfo([`isLogged=${isLogged}`]);
     }
   }, [isLogged]);
 
@@ -93,6 +108,7 @@ export default function Home() {
           </div>
         )}
       </section>
+      <DebugPanel visible={showDebug} error={fetchError} lines={debugInfo} />
     </div>
   );
 }

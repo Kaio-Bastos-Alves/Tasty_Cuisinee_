@@ -1,5 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { apiCall } from '../lib/api.ts';
+import { apiCall, API_ENDPOINTS, favoritosAPI } from '../lib/api.ts';
+
+export function normalizeFavoritesResponse(data) {
+  const list = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.content)
+      ? data.content
+      : Array.isArray(data?.data)
+        ? data.data
+        : [];
+
+  const favorites = [];
+  const favoritosMap = {};
+
+  list.forEach((item) => {
+    const recipeId = item?.receita?.codReceitas?.toString();
+    if (!recipeId) return;
+    favorites.push(recipeId);
+    favoritosMap[recipeId] = item?.codFavoritos;
+  });
+
+  return { favorites, favoritosMap, list };
+}
 
 export function useFavorites() {
   const [favorites, setFavorites] = useState([]);
@@ -7,26 +29,26 @@ export function useFavorites() {
   const userId = localStorage.getItem('userId');
   const userType = localStorage.getItem('userType');
 
-  useEffect(() => {
-    const fetchFavorites = async () => {
-      if (userId && userType === 'usuario') {
-        try {
-          const response = await apiCall(`/favorito/usuario/${userId}`);
-          if (response && Array.isArray(response.data)) {
-            const myFavs = response.data.map(f => f.receita.codReceitas.toString());
-            const map = {};
-            response.data.forEach(f => {
-              map[f.receita.codReceitas.toString()] = f.codFavoritos;
-            });
-            setFavorites(myFavs);
-            setFavoritosMap(map);
-          }
-        } catch (err) {
-          console.error("Erro ao carregar favoritos:", err);
-          setFavorites([]);
+  const fetchFavorites = async () => {
+    if (userId && userType === 'usuario') {
+      try {
+        const response = await apiCall(`${API_ENDPOINTS.FAVORITOS}/usuario/${userId}`);
+        if (response) {
+          const normalized = normalizeFavoritesResponse(response.data);
+          setFavorites(normalized.favorites);
+          setFavoritosMap(normalized.favoritosMap);
+          return normalized;
         }
+      } catch (err) {
+        console.error("Erro ao carregar favoritos:", err);
+        setFavorites([]);
+        setFavoritosMap({});
       }
-    };
+    }
+    return { favorites: [], favoritosMap: {}, list: [] };
+  };
+
+  useEffect(() => {
     fetchFavorites();
   }, [userId, userType]);
 
@@ -42,7 +64,7 @@ export function useFavorites() {
           usuario: { codUser: parseInt(userId) },
           receita: { codReceitas: parseInt(id) }
         };
-        const res = await apiCall('/favorito', { method: 'POST', body: JSON.stringify(payload) });
+        const res = await favoritosAPI.create(payload);
         if (res.data) {
           setFavorites(prev => [...prev, id]);
           setFavoritosMap(prev => ({ ...prev, [id]: res.data.codFavoritos }));
@@ -50,15 +72,16 @@ export function useFavorites() {
       } else {
         const codFavoritos = favoritosMap[id];
         if (codFavoritos) {
-          await apiCall(`/favorito/${codFavoritos}`, { method: 'DELETE' });
+          await favoritosAPI.delete(codFavoritos);
           setFavorites(prev => prev.filter(f => f !== id));
           setFavoritosMap(prev => { const updated = { ...prev }; delete updated[id]; return updated; });
         }
       }
+      await fetchFavorites();
     } catch (err) { console.error(err); }
   };
 
-  return { favorites, toggleFavorite };
+  return { favorites, toggleFavorite, refreshFavorites: fetchFavorites };
 }
 
 // GARANTINDO A EXPORTAÇÃO DO useHistory

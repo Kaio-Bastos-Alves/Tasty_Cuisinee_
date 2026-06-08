@@ -22,13 +22,15 @@ export default function RecipeCard({
         <div className="recipe-card-image">
           <span className="badge">{recipe.categoria || 'Geral'}</span>
           <button
-            className="favorite-btn"
+            className={`favorite-btn ${isFavorite ? 'liked' : ''}`}
             onClick={(e) => {
               e.preventDefault();
               onToggleFavorite(id);
             }}
+            aria-pressed={isFavorite}
+            aria-label={isFavorite ? 'Remover favorito' : 'Adicionar aos favoritos'}
           >
-            {isFavorite ? '♥' : '♡'}
+            <span className="heart">{isFavorite ? '♥' : '♡'}</span>
           </button>
           <img src={recipeImage} alt={recipe.nome} />
         </div>

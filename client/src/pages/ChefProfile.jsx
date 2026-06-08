@@ -14,10 +14,15 @@ export default function ChefProfile() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [debugInfo, setDebugInfo] = useState([]);
+  const [formData, setFormData] = useState({
+    nomeCompleto: '',
+    nomeUsuario: '',
+    gmail: '',
+    idade: '',
+    senha: '',
+    fotoPerfil: '',
+  });
   const { favorites } = useFavorites();
-
-  const userType = localStorage.getItem('userType');
-  const userId = localStorage.getItem('userId');
 
   useEffect(() => {
     if (userType !== 'chefe' || !userId) {
@@ -46,6 +51,14 @@ export default function ChefProfile() {
         }
 
         setChef(chefRes.data);
+        setFormData({
+          nomeCompleto: chefRes.data.nomeCompleto || '',
+          nomeUsuario: chefRes.data.nomeUsuario || '',
+          gmail: chefRes.data.gmail || '',
+          idade: chefRes.data.idade || '',
+          senha: chefRes.data.senha || '',
+          fotoPerfil: chefRes.data.fotoPerfil || '',
+        });
         debug.push(`chef encontrado: codChefe=${chefRes.data.codChefe} nome=${chefRes.data.nomeCompleto}`);
 
         const receitasRes = await receitasAPI.getByChef(chefId);
@@ -135,6 +148,54 @@ export default function ChefProfile() {
   const mediaD = totalReceitas > 0 ? (somaD / totalReceitas).toFixed(1) : 0;
   const nivelTexto = mediaD <= 1.5 ? 'Fácil' : mediaD <= 2.5 ? 'Médio' : 'Difícil';
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const requestPassword = () => {
+    const password = window.prompt('Confirme sua senha para salvar as alterações:');
+    if (password === null) return null;
+    if (!password.trim()) {
+      alert('A senha não pode ficar em branco.');
+      return null;
+    }
+    return password.trim();
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      const resolvedNomeCompleto = formData.nomeCompleto || chef?.nomeCompleto || '';
+      const resolvedNomeUsuario = formData.nomeUsuario || chef?.nomeUsuario || '';
+      const resolvedGmail = formData.gmail || chef?.gmail || '';
+      const resolvedSenha = requestPassword();
+      if (!resolvedSenha) return;
+      const resolvedIdade = Number(formData.idade || chef?.idade || 14);
+      const payload = {
+        codChefe: Number(userId),
+        nomeUsuario: resolvedNomeUsuario,
+        nomeCompleto: resolvedNomeCompleto,
+        idade: resolvedIdade,
+        gmail: resolvedGmail,
+        senha: resolvedSenha,
+        fotoPerfil: formData.fotoPerfil ? String(formData.fotoPerfil) : (chef?.fotoPerfil ? String(chef.fotoPerfil) : null),
+      };
+
+      const response = await chefesAPI.update(userId, payload);
+      if (!response.error) {
+        setChef(prev => ({ ...prev, ...response.data }));
+        alert('Perfil atualizado com sucesso!');
+        setIsEditing(false);
+      } else {
+        console.error('chef update error:', response.error, 'status:', response.status, 'payload:', payload);
+        alert('Erro ao atualizar perfil.');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao atualizar perfil.');
+    }
+  };
+
   return (
     <div className="chef-profile">
       {/* HEADER PERFIL CHEFE */}
@@ -174,18 +235,26 @@ export default function ChefProfile() {
       {isEditing && (
         <section className="perfil-edicao">
           <div className="perfil-info">
-            <div className="avatar">👨‍🍳</div>
+            <div className="avatar">
+              {formData.fotoPerfil ? (
+                <img
+                  src={formData.fotoPerfil}
+                  alt={formData.nomeCompleto || 'Foto do chefe'}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                />
+              ) : (
+                '👨‍🍳'
+              )}
+            </div>
             <div className="inputs">
-              <input type="text" placeholder="Nome" defaultValue={chef.nomeCompleto} />
-              <input type="email" placeholder="E-mail" defaultValue={chef.gmail || ''} />
-              <input type="text" placeholder="Usuário" defaultValue={chef.nomeUsuario} />
-              <input type="text" placeholder="Idade" defaultValue={chef.idade || ''} />
-              <textarea placeholder="Bio" style={{ width: '250px', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', resize: 'vertical' }}>
-                {chef.bio || ''}
-              </textarea>
+              <input name="nomeCompleto" type="text" placeholder="Nome" value={formData.nomeCompleto} onChange={handleChange} />
+              <input name="gmail" type="email" placeholder="E-mail" value={formData.gmail} onChange={handleChange} />
+              <input name="nomeUsuario" type="text" placeholder="Usuário" value={formData.nomeUsuario} onChange={handleChange} />
+              <input name="idade" type="number" placeholder="Idade" value={formData.idade} onChange={handleChange} />
+              <input name="fotoPerfil" type="url" placeholder="URL da foto do perfil" value={formData.fotoPerfil} onChange={handleChange} />
             </div>
           </div>
-          <button className="btn-salvar" onClick={() => setIsEditing(false)}>Salvar</button>
+          <button className="btn-salvar" onClick={handleSaveProfile}>Salvar</button>
         </section>
       )}
 

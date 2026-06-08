@@ -36,6 +36,7 @@
   width: 40%;
   height: 500px;
   object-fit: cover;
+  background: #f6efe6;
 }
 
 .chef-info-section {
@@ -108,7 +109,7 @@
   text-align: center;
 }
 
-.recipes-grid {
+.chef-recipes .recipes-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
@@ -124,7 +125,7 @@
     height: 400px;
   }
 
-  .recipes-grid {
+  .chef-recipes .recipes-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
@@ -138,7 +139,7 @@
     font-size: 32px;
   }
 
-  .recipes-grid {
+  .chef-recipes .recipes-grid {
     grid-template-columns: 1fr;
   }
 }

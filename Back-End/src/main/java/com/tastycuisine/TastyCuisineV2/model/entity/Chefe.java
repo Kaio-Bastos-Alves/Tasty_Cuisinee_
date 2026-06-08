@@ -41,8 +41,8 @@ public class Chefe {
     @NotBlank
     private String gmail;
 
-    @Column(name = "foto_perfil")
-    private byte[] fotoPerfil;
+    @Column(name = "foto_perfil", columnDefinition = "NVARCHAR(MAX)")
+    private String fotoPerfil;
 
     @ManyToMany
     @JoinTable(
