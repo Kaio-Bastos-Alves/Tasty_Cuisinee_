@@ -16,6 +16,7 @@ CREATE TABLE Usuario (
     Idade INT NOT NULL,
     Gmail NVARCHAR(255) NOT NULL UNIQUE,
     Senha NVARCHAR(250) NOT NULL,
+    Status_Usuario NVARCHAR(20) NOT NULL DEfault 'ATIVO',
     Restricoes_alimentares NVARCHAR(MAX),
 );
 -- 3. Tabela de Chefe

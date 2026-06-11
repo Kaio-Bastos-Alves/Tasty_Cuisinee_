@@ -29,8 +29,10 @@ public class Usuario {
     @Column(name = "Cod_user")
     private long codUser;
 
-    @Column(name = "Status_User")
-    private Boolean statusUser;
+
+    @Builder.Default()
+    @Column(name = "Status_Usuario", length =  20, nullable =  false)
+    private String Status_Usuario = "ATIVO";
 
     @Column(name = "nome_completo", length = 300, nullable = false)
     @NotBlank
@@ -52,6 +54,7 @@ public class Usuario {
     @Column(length = 250, nullable = false)
     @NotBlank
     private String senha;
+
 
     @Column(name = "Restricoes_alimentares", nullable = true, columnDefinition = "NVARCHAR(MAX)")
     private String restricoesAlimentares;

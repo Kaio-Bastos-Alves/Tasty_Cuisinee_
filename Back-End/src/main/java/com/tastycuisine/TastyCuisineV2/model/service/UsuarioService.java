@@ -19,7 +19,7 @@ public class UsuarioService {
 
     // Salvar usuario
     public Usuario save(Usuario usuario) {
-        usuario.setStatusUser(true);
+        usuario.setStatus_Usuario("ATIVO");
         return usuarioRepository.save(usuario);
     }
 
@@ -57,25 +57,33 @@ public class UsuarioService {
     //desativar usuario (delete lógico)
     public void delete(Long codUser) {
         Usuario usuarioExistente = findById(codUser);
-        usuarioExistente.setStatusUser(false);
+        usuarioExistente.setStatus_Usuario("INATIVO");
         usuarioRepository.save(usuarioExistente);
     }
 
     //alterar status do usuario (banir/reativar)
-    public Usuario alterarStatus(Long codUser, boolean status) {
+    public Usuario ativate(Long codUser) {
         Usuario usuarioExistente = findById(codUser);
-        usuarioExistente.setStatusUser(status);
+        usuarioExistente.setStatus_Usuario("ATIVO");
         return usuarioRepository.save(usuarioExistente);
     }
 
     //login de usuario
     public Usuario login(String gmail, String senha) {
         Usuario usuario = usuarioRepository.findByGmailAndSenha(gmail, senha)
-                .orElseThrow(() -> new RuntimeException("Email ou senha incorretos"));
-        if (Boolean.FALSE.equals(usuario.getStatusUser())) {
-            throw new RuntimeException("Usuário banido ou inativo");
+                .orElseThrow(() -> new RuntimeException("EMAIL_OU_SENHA_INCORRETOS"));
+        if ("INATIVO".equals(usuario.getStatus_Usuario())) {
+            throw new RuntimeException("CONTA_INATIVA");
         }
         return usuario;
+    }
+
+    // reativar conta com senha
+    public Usuario reativar(String gmail, String senha) {
+        Usuario usuario = usuarioRepository.findByGmailAndSenha(gmail, senha)
+                .orElseThrow(() -> new RuntimeException("EMAIL_OU_SENHA_INCORRETOS"));
+        usuario.setStatus_Usuario("ATIVO");
+        return usuarioRepository.save(usuario);
     }
 
 

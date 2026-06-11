@@ -1,15 +1,24 @@
 package com.tastycuisine.TastyCuisineV2.controller;
 
-import com.tastycuisine.TastyCuisineV2.model.entity.Usuario;
-import com.tastycuisine.TastyCuisineV2.model.service.UsuarioService;
-import jakarta.validation.Valid;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Map;
+import com.tastycuisine.TastyCuisineV2.model.entity.Usuario;
+import com.tastycuisine.TastyCuisineV2.model.service.UsuarioService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/usuario")
@@ -54,8 +63,9 @@ public class UsuarioController {
             );
         }
     }
+    
 
-    @DeleteMapping("/{codUser}")
+    @PutMapping("/delete/{codUser}")
     public ResponseEntity<Object> deleteUsuario(@PathVariable Long codUser) {
         try {
             usuarioService.delete(codUser);
@@ -70,9 +80,9 @@ public class UsuarioController {
     }
 
     @PatchMapping("/{codUser}/status")
-    public ResponseEntity<Object> alterarStatus(@PathVariable Long codUser, @RequestParam boolean status) {
+    public ResponseEntity<Object> alterarStatus(@PathVariable Long codUser) {
         try {
-            return ResponseEntity.ok(usuarioService.alterarStatus(codUser, status));
+            return ResponseEntity.ok(usuarioService.ativate(codUser));
         } catch (RuntimeException e) {
             return ResponseEntity.status(404).body(
                     Map.of("status", 404,
@@ -88,6 +98,28 @@ public class UsuarioController {
             String gmail = body.get("email");
             String senha = body.get("senha");
             return ResponseEntity.ok(usuarioService.login(gmail, senha));
+        } catch (RuntimeException e) {
+            if ("CONTA_INATIVA".equals(e.getMessage())) {
+                return ResponseEntity.status(403).body(Map.of(
+                    "status", 403,
+                    "error", "conta_inativa",
+                    "message", "Conta inativa"
+                ));
+            }
+            return ResponseEntity.status(401).body(Map.of(
+                    "status", 401,
+                    "error", "unauthorized",
+                    "message", "Email ou senha incorretos"
+            ));
+        }
+    }
+
+    @PostMapping("/reativar")
+    public ResponseEntity<Object> reativar(@RequestBody Map<String, String> body) {
+        try {
+            String gmail = body.get("email");
+            String senha = body.get("senha");
+            return ResponseEntity.ok(usuarioService.reativar(gmail, senha));
         } catch (RuntimeException e) {
             return ResponseEntity.status(401).body(Map.of(
                     "status", 401,
